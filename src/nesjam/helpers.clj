@@ -72,7 +72,6 @@
 (defn find-thing [value coll]
   (first-index-of #(= % value) coll))
 
-;;debugging parts of expressions
 (defmacro dbg [x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
 (defn update-print [x]
@@ -99,3 +98,36 @@
     (if (< tick (/ interval 2))
       (str string \_)
       (str string \|))))
+
+(defn split-at-first [value list]
+  (let [split-index (first-index-of #(= value %) list)
+        split-index (if (nil? split-index) (count list) split-index)
+
+        [before-value after-value] (split-at split-index list)]
+    [before-value (drop 1 after-value)]))
+
+(defmacro defn-defaults [name args body]
+  "Create a function that can provide default values for arguments.
+
+  Separate arguments that are optional from non-optional using the
+  :optional keyword. Each optional argument should be followed by
+  a value to be used as its default.
+
+  When invoking the function, :<optional-argument-name> <value> will
+  specify the value the argument should take on."
+
+  `(defn
+     ~name
+     ~(let [[mandatory optional] (split-at-first :defaults args)
+            optional-names-and-values (partition 2 optional)
+
+            optional-names (map first optional-names-and-values)
+            default-dict (apply merge
+                                (map #(apply array-map %)
+                                     optional-names-and-values))]
+        (vec (concat mandatory
+                     (if (empty? optional)
+                       []
+                       [(symbol "&") {:keys (vec optional-names)
+                                      :or default-dict}]))))
+     ~body))
