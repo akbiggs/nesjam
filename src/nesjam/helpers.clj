@@ -116,18 +116,18 @@
   When invoking the function, :<optional-argument-name> <value> will
   specify the value the argument should take on."
 
-  `(defn
-     ~name
-     ~(let [[mandatory optional] (split-at-first :defaults args)
-            optional-names-and-values (partition 2 optional)
+  (if (some #{:defaults} args)
+    `(defn
+       ~name
+       ~(let [[mandatory optional] (split-at-first :defaults args)
+              optional-names-and-values (partition 2 optional)
 
-            optional-names (map first optional-names-and-values)
-            default-dict (apply merge
-                                (map #(apply array-map %)
-                                     optional-names-and-values))]
-        (vec (concat mandatory
-                     (if (empty? optional)
-                       []
+              optional-names (map first optional-names-and-values)
+              default-dict (apply merge
+                                  (map #(apply array-map %)
+                                       optional-names-and-values))]
+          (vec (concat mandatory
                        [(symbol "&") {:keys (vec optional-names)
-                                      :or default-dict}]))))
-     ~body))
+                                      :or default-dict}])))
+       ~body)
+    `(defn ~name ~args ~body)))
