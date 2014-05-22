@@ -93,6 +93,12 @@
              `(helpers/react ~(first stmt-pair)
                              ~(second stmt-pair)))))
 
+(defn map-over-keys [fn hash]
+  (apply merge (for [[k v] hash] {(fn k) v})))
+
+(defn map-over-values [fn hash]
+  (apply merge (for [[k v] hash] {k (fn v)})))
+
 (defn add-cursor [string interval]
   (let [tick (mod (now) interval)]
     (if (< tick (/ interval 2))
@@ -106,28 +112,30 @@
         [before-value after-value] (split-at split-index list)]
     [before-value (drop 1 after-value)]))
 
-(defmacro defn-opts [name args body]
+(defn name->symbol [arg]
+  (cond (symbol? arg) arg
+        (keyword? arg) (symbol (name arg))
+        :else (symbol (str arg))))
+
+(map? 5)
+
+(defmacro defn-defaults [name args body]
   "Create a function that can provide default values for arguments.
 
-  Separate arguments that are optional from non-optional using the
-  :optional keyword. Each optional argument should be followed by
-  a value to be used as its default.
+  Arguments that are optional should be placed in a hash with
+  their names mapped to their default values.
 
-  When invoking the function, :<optional-argument-name> <value> will
-  specify the value the argument should take on."
+  When invoking the function, :<optional-argument-name> <value>
+  will specify the value the argument should take on."
 
-  (if (some #{:defaults} args)
+  (if (map? (last args))
     `(defn
        ~name
-       ~(let [[mandatory optional] (split-at-first :defaults args)
-              optional-names-and-values (partition 2 optional)
-
-              optional-names (map first optional-names-and-values)
-              default-dict (apply merge
-                                  (map #(apply array-map %)
-                                       optional-names-and-values))]
-          (vec (concat mandatory
-                       [(symbol "&") {:keys (vec optional-names)
-                                      :or default-dict}])))
+       ~(let [mandatory-args (drop-last args)
+              options (map-over-keys name->symbol (last args))
+              option-names (vec (keys options))]
+          (vec (concat mandatory-args
+                       [(symbol "&") {:keys option-names
+                                      :or options}])))
        ~body)
     `(defn ~name ~args ~body)))

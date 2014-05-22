@@ -19,7 +19,6 @@
    :cycles-key-held 0
    })
 
-
 (defn update [elapsed-time previous-input]
   (let [mouse-down? (or (= (q/mouse-button) :left)
                         (= (q/mouse-button) :right))

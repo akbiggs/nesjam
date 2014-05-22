@@ -2,10 +2,11 @@
   (:use [clojure.java.io]))
 
 (defn serialize! [name data]
-  (with-open [w (writer (str "resources/" name))]
-    (.write w
-            (with-out-str
-              (binding [*print-dup* true] (prn data))))))
+  (when-not (empty? name)
+    (with-open [w (writer (str "resources/" name))]
+      (.write w
+              (with-out-str
+                (binding [*print-dup* true] (prn data)))))))
 
 (defn deserialize [name]
   (let [f (as-file (str "resources/" name))]

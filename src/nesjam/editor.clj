@@ -3,16 +3,13 @@
             [nesjam.tilemap :as tilemap]
             [nesjam.helpers :as helpers]
             [nesjam.serializer :as serializer]
+            [nesjam.console :as console]
 
             [quil.core :as q]))
 
 (defn create []
   {:tiletype 0
-   :filename ""
-   :changing-filename? false})
-
-; SINGLETON
-(def instance (atom (create)))
+   :console (console/create \~)})
 
 (defn- make-tile-op [op]
   (fn [position world]
@@ -24,8 +21,8 @@
 
 (def remove-tile (make-tile-op tilemap/remove-tile))
 
-(defn- save-level! [in world]
-  (let [filename (:filename @instance)]
+(defn- save-level! [in world editor]
+  (let [filename (:filename editor)]
     (when (seq? filename))
       (serializer/serialize! filename (:tilemap world)))
   world)
