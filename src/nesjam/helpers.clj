@@ -106,7 +106,7 @@
         [before-value after-value] (split-at split-index list)]
     [before-value (drop 1 after-value)]))
 
-(defmacro defn-defaults [name args body]
+(defmacro defn-opts [name args body]
   "Create a function that can provide default values for arguments.
 
   Separate arguments that are optional from non-optional using the
